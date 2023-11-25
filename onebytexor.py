@@ -1,5 +1,6 @@
 from xor import byte_xor
 from dataclasses import dataclass
+from typing import Optional
 
 
 def byte_frequency(b):
@@ -47,30 +48,43 @@ letter_frequencies = {
 }
 
 
+def calculate_score(t_p: bytes) -> float:
+    length = len(t_p)
+    score = 0.0
+    for letter, value in letter_frequencies.items():
+        frequency = t_p.count(ord(letter))/length
+        err = abs(frequency - value)
+        score += err
+    return score
+
+
 @dataclass(order=True)
 class Score:
-    score: float = 'inf'
-    key: bytes = None
-    cipher_text: bytes = None
-    plain_text: bytes = None
+    score: float = float('inf')
+    key: Optional[bytes] = None
+    cipher_text: Optional[bytes] = None
+    plain_text: Optional[bytes] = None
 
     @classmethod
-    def best_score(cls, c_t):
-        pass
+    def best_score(cls, c_t: str, int_key: int,):
+        b_ct = bytes.fromhex(c_t)
+        b_k = bytes([int_key]) * len(b_ct)
+        b_p = byte_xor(b_k, b_ct)
+        score = calculate_score(b_p)
+        return cls(score, b_k, b_ct, b_p)
+
+
+def find_best(c_t: str) -> Score:
+    best_s = Score()
+    for i in range(256):
+        test_score = Score.best_score(c_t, i)
+        best_s = min(best_s, test_score)
+    if best_s.plain_text is None:
+        exit('No such key')
+    return best_s
 
 
 if __name__ == '__main__':
     ciphertext = '1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736'
-    byte_ciphertext = bytes.fromhex(ciphertext)
-    byte_frequency_cipher = byte_frequency(byte_ciphertext)
-    frequency_cipher = chr(byte_frequency_cipher)
-    byte_frequency_cipher = frequency_cipher.encode()
-    # 改变这里的值来测试test_plain
-    test_plain = ' '
-    byte_test_plain = test_plain.encode()
-    byte_test_key = byte_xor(byte_frequency_cipher, byte_test_plain)
-    byte_array_test_key = bytearray(bytes([ord(byte_test_key.decode())]*len(byte_ciphertext)))
-    test_key = bytes(byte_array_test_key)
-    byte_test_plain = byte_xor(test_key, bytes.fromhex(ciphertext))
-    print('the key is', byte_test_key)
-    print(byte_test_plain)
+    best = find_best(ciphertext)
+    print(best)
