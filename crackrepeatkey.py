@@ -1,13 +1,14 @@
-from onebytexor import find_best
+from onebytexor import find_best, calculate_score
 from repeatingxor import repeat_xor
+import base64
 
 
 def divide_txt(b_text: bytes, size: int):
     return b_text[0: size], b_text[size: size+size]
 
 
-def hamming_distance(b_t1: bytes, b_t2: bytes) -> int:
-    return sum(bin(b1 ^ b2).count('1') for b1, b2 in zip(b_t1, b_t2))
+def hamming_distance(b_t1: bytes, b_t2: bytes) -> float:
+    return sum(bin(b1 ^ b2).count('1') for b1, b2 in zip(b_t1, b_t2))/len(b_t1)
 
 
 def divided_text(b_text: bytes, size: int) -> list:
@@ -25,28 +26,29 @@ def extract_bytes(ded_t: list, size: int) -> list:
     return b_list
 
 
-def crack_cipher(b_c: bytes) -> bytes:
-    min_distance = 10**100
+def crack_cipher(b_c: bytes) -> tuple[bytes, int]:
+    min_score = float('inf')
+    best_plain = None
     best_key_size = None
     for key_size in range(2, 41):
-        b_c1, b_c2 = divide_txt(b_c, key_size)
-        distance = hamming_distance(b_c1, b_c2)
-        if distance < min_distance:
-            min_distance = distance
+        d_ct = divided_text(b_c, key_size)
+        e_ct = extract_bytes(d_ct, key_size)
+        key = b''
+        for i in range(key_size):
+            key += find_best(e_ct[i]).key
+        cracked_text = repeat_xor(key, b_c)
+        score = calculate_score(cracked_text)
+        if score < min_score:
+            min_score = score
+            best_plain = cracked_text
             best_key_size = key_size
-    d_ct = divided_text(b_c, best_key_size)
-    e_ct = extract_bytes(d_ct, best_key_size)
-    best_key = b''
-    for i in range(best_key_size):
-        best_key += find_best(e_ct[i]).key
-        print(find_best(e_ct[i]).key)
-    cracked_text = repeat_xor(best_key, b_c)
-    return cracked_text
+    return best_plain, best_key_size
 
 
 if __name__ == '__main__':
     with open('6.txt', 'r') as f:
         cipher_t = f.read().strip()
-    b_cipher_t = cipher_t.encode()
-    cracked = crack_cipher(b_cipher_t)
-    print(cracked)
+    b_cipher_t = base64.b64decode(cipher_t)
+    cracked, ks = crack_cipher(b_cipher_t)
+    crack_t = cracked.decode()
+    print(crack_t, ks)
