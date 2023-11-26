@@ -66,15 +66,14 @@ class Score:
     plain_text: Optional[bytes] = None
 
     @classmethod
-    def best_score(cls, c_t: str, int_key: int,):
-        b_ct = bytes.fromhex(c_t)
+    def best_score(cls, b_ct: bytes, int_key: int,):
         b_k = bytes([int_key]) * len(b_ct)
         b_p = byte_xor(b_k, b_ct)
         score = calculate_score(b_p)
-        return cls(score, b_k, b_ct, b_p)
+        return cls(score, bytes([int_key]), b_ct, b_p)
 
 
-def find_best(c_t: str) -> Score:
+def find_best(c_t: bytes) -> Score:
     best_s = Score()
     for i in range(256):
         test_score = Score.best_score(c_t, i)
@@ -86,5 +85,6 @@ def find_best(c_t: str) -> Score:
 
 if __name__ == '__main__':
     ciphertext = '1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736'
+    ciphertext = bytes.fromhex(ciphertext)
     best = find_best(ciphertext)
     print(best)
