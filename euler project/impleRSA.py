@@ -1,12 +1,8 @@
 from crypto_challenges.oujilide import extended_gcd
 from dataclasses import dataclass
 from typing import Optional
-import random
 import sympy
-import time
 import secrets
-
-
 
 
 def str2num(txt: str) -> int:
