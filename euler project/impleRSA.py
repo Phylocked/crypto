@@ -81,7 +81,6 @@ if __name__ == '__main__':
     mp, mq = generate_two_random_primes(512)
     myRsa = Rsa.gen_rsa_key(mp, mq, 3)
     int_cipher = myRsa.encrypto_rsa(int_plain)
-    print(int_cipher)
     decrypto = myRsa.decrypto_rsa(int_cipher)
     print(decrypto)
     str_plain = num2str(decrypto)

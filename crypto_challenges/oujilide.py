@@ -10,7 +10,8 @@ if __name__ == "__main__":
     b = int(input("请输入b的值: "))
 
     gcd, x, y = extended_gcd(a, b)
-
+    if x < 0:
+        x += b
     print(f"{a}和{b}的最大公约数是: {gcd}")
     print(f"x = {x}, y = {y}")
     print(f"{a}*{x} + {b}*{y} = {gcd}")
